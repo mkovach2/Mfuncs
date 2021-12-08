@@ -1,13 +1,17 @@
 function nicePlot(xVals, yVals, varargin)
 % nicePlot makes a nice plot
-% last modified:  2021-11-02 mkovach@bu.edu
-% example: nicePlot([xv1; xv2],[yv1; yv2],nan,nan,nan,nan,5,6,7,1,1);
+% last modified:  2021-11-08 mkovach@bu.edu
+% example: nicePlot([xv1; xv2],[yv1; yv2],xLo,xHi,yLo,yHi,...
+%                    xTnum,yTnum,gridOn,eqAsp,holdOn);
 % 
+% if no inputs are provided, nicePlot
+% will (at least attempt to) apply the default state to the current plot.  
 % the first two arguments will be the x and y vectors (or x and y matrices where
-% the rows act as vectors)to plot
+% the rows act as vectors)to plot.
 % the variable-size input vector specifies the following:
 % a nan in any position will skip setting the parameter in that position.
 % if nothing is entered after yVals, default values will be assumed.
+% 
 % varargin{1} = xLo, x axis minimum
 %         {2} = xHi, x axis maximum
 %         {3} = yLo, y axis minimum
@@ -27,8 +31,17 @@ function nicePlot(xVals, yVals, varargin)
   % if no inputs are provided, nicePlot
   % will (at least attempt to) apply the default state to the current plot  
   if not(nargin)
-    xVals = get(get(gca, 'children'),"xdata");
-    yVals = get(get(gca, 'children'),"ydata");
+    try
+      xVals = get(get(gca, 'children'),"xdata");
+      yVals = get(get(gca, 'children'),"ydata");
+      if(class(yVals) == "cell")
+        xVals = cell2mat(xVals);
+        yVals = cell2mat(yVals);
+      end
+    catch
+      xVals = get(gca, "xlim");
+      yVals = get(gca, "ylim");
+    end
     truNarg = nargin + 2;
   end
 
@@ -105,42 +118,12 @@ function nicePlot(xVals, yVals, varargin)
     ytickvec = [flip(0:-tickSize(2):finVec(3),1) ...
                 tickSize(2):tickSize(2):finVec(4)];
   else
-    [finVec(3) tickSize(2) finVec(4)]
+    if 0 %debugging_if
+      [finVec(3) tickSize(2) finVec(4)]
+    end
     ytickvec = (finVec(3):tickSize(2):finVec(4));
   end
 
-  if 0 %old version of the above step, delete soon
-    if and(xMin < 0, sX > 0)
-      xtickvec = [linspace(finVec(1),0,sX)...
-                  linspace(0,finVec(2),finVec(5)-sX)(2:end)];
-    elseif and(xMin < 0, sX == 0)
-      xtickvec = [-xDif./finVec(5) linspace(0,finVec(2),finVec(5)-1)];
-      [-xDif./finVec(5) finVec(2) finVec(5)]
-    else
-      [finVec(1) finVec(2) finVec(5)]
-      xtickvec = linspace(finVec(1),finVec(2),finVec(5));
-    end
-    % and for y
-    if and(yMin < 0, sY > 0)
-      ytickvec = [linspace(finVec(3),0,sY)...
-                  linspace(0,finVec(4),finVec(6)-sY)(2:end)];
-    elseif and(yMin < 0, sY == 0)
-      ytickvec = [-yDif./finVec(6) linspace(0,finVec(4),finVec(6)-1)];
-    else
-      [finVec(3) finVec(4) finVec(6)]
-      ytickvec = linspace(finVec(3),finVec(4),finVec(6));
-    end
-  end
-  
-  if 0 % more old code, delete soon
-    if yDif > yMax
-      ytickvec = [linspace(finVec(3),0,floor(finVec(6) * floor(-yMin/yDif)))...
-                  linspace(0,finVec(4),finVec(6) * (1-floor(-yMin/yDif)))(2:end)];
-    else
-      ytickvec = linspace(finVec(3),finVec(4),finVec(6));
-    end
-  end
-  
   % setting the params for a joined plot
   xlim(finVec(1:2));
   ylim(finVec(3:4));
